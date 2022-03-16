@@ -2,14 +2,23 @@ using DEMO.Minimal.Api.Data;
 using DEMO.Minimal.Api.Models;
 using Microsoft.EntityFrameworkCore;
 using MiniValidation;
+using NetDevPack.Identity;
+using NetDevPack.Identity.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddIdentityEntityFrameworkContextConfiguration(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    b => b.MigrationsAssembly("DEMO.Minimal.Api")));
+
 builder.Services.AddDbContext<MinimalContextDb>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddIdentityConfiguration();
+builder.Services.AddJwtConfiguration(builder.Configuration, "AppSettings");
 
 var app = builder.Build();
 
@@ -19,6 +28,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthConfiguration();
 app.UseHttpsRedirection();
 
 app.MapGet("/fornecedor", async (
