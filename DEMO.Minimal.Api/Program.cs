@@ -92,6 +92,9 @@ app.Run();
 
 void MapActions(WebApplication app)
 {
+    /// <summary>
+    /// Enter a template to register a user
+    /// </summary>
     app.MapPost("/registro", [AllowAnonymous] async (
         SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager,
@@ -133,6 +136,9 @@ void MapActions(WebApplication app)
       .WithName("RegistroUsuario")
       .WithTags("Usuario");
 
+    /// <summary>
+    /// Enter a template to login a user
+    /// </summary>
     app.MapPost("/login", [AllowAnonymous] async (
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
@@ -170,12 +176,18 @@ void MapActions(WebApplication app)
           .WithName("LoginUsuario")
           .WithTags("Usuario");
 
+    /// <summary>
+    /// Get all Fornecedores
+    /// </summary>
     app.MapGet("/fornecedor", [AllowAnonymous] async (MinimalContextDb context) =>
 
         await context.Fornecedores.ToListAsync())
         .WithName("GetFornecedor")
         .WithTags("Fornecedor");
 
+    /// <summary>
+    /// Get Fornecedor by Id
+    /// </summary>
     app.MapGet("/fornecedor/{id}", async (Guid id, MinimalContextDb context) =>
 
         await context.Fornecedores.FindAsync(id)
@@ -207,6 +219,9 @@ void MapActions(WebApplication app)
         .WithName("PostFornecedor")
         .WithTags("Fornecedor");
 
+    /// <summary>
+    /// Update a model by Id
+    /// </summary>
     app.MapPut("/fornecedor/{id}", [Authorize] async (Guid id, MinimalContextDb context, Fornecedor fornecedor) =>
     {
         var fornecedorBanco = await context.Fornecedores.AsNoTracking<Fornecedor>()
@@ -230,6 +245,9 @@ void MapActions(WebApplication app)
       .WithName("PutFornecedor")
       .WithTags("Fornecedor");
 
+    /// <summary>
+    /// Delete a model by Id
+    /// </summary>
     app.MapDelete("/fornecedor/{id}", [Authorize] async (Guid id, MinimalContextDb context) =>
     {
         var fornecedor = await context.Fornecedores.FindAsync(id);
