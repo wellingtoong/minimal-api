@@ -1,9 +1,12 @@
 using DEMO.Minimal.Api.Data;
 using DEMO.Minimal.Api.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MiniValidation;
 using NetDevPack.Identity;
 using NetDevPack.Identity.Jwt;
+using NetDevPack.Identity.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +33,84 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthConfiguration();
 app.UseHttpsRedirection();
+
+app.MapPost("/registro", async (
+        SignInManager<IdentityUser> signInManager,
+        UserManager<IdentityUser> userManager,
+        IOptions<AppJwtSettings> appJwtSettings,
+        RegisterUser registerUser) =>
+{
+    if (registerUser == null)
+        return Results.BadRequest("Usuário não informado");
+
+    if (!MiniValidator.TryValidate(registerUser, out var errors))
+        return Results.ValidationProblem(errors);
+
+    var user = new IdentityUser
+    {
+        UserName = registerUser.Email,
+        Email = registerUser.Email,
+        EmailConfirmed = true
+    };
+
+    var result = await userManager.CreateAsync(user, registerUser.Password);
+
+    if (!result.Succeeded)
+        return Results.BadRequest(result.Errors);
+
+    var jwt = new JwtBuilder()
+                .WithUserManager(userManager)
+                .WithJwtSettings(appJwtSettings.Value)
+                .WithEmail(user.Email)
+                .WithJwtClaims()
+                .WithUserClaims()
+                .WithUserRoles()
+                .BuildUserResponse();
+
+    return Results.Ok(jwt);
+
+}).ProducesValidationProblem()
+      .Produces(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status400BadRequest)
+      .WithName("RegistroUsuario")
+      .WithTags("Usuario");
+
+app.MapPost("/login", async (
+        SignInManager<IdentityUser> signInManager,
+        UserManager<IdentityUser> userManager,
+        IOptions<AppJwtSettings> appJwtSettings,
+        LoginUser loginUser) =>
+{
+    if (loginUser == null)
+        return Results.BadRequest("Usuário não informado");
+
+    if (!MiniValidator.TryValidate(loginUser, out var errors))
+        return Results.ValidationProblem(errors);
+
+    var result = await signInManager.PasswordSignInAsync(loginUser.Email, loginUser.Password, false, true);
+
+    if (result.IsLockedOut)
+        return Results.BadRequest("Usuário bloqueado");
+
+    if (!result.Succeeded)
+        return Results.BadRequest("Usuário ou senha inválidos");
+
+    var jwt = new JwtBuilder()
+                .WithUserManager(userManager)
+                .WithJwtSettings(appJwtSettings.Value)
+                .WithEmail(loginUser.Email)
+                .WithJwtClaims()
+                .WithUserClaims()
+                .WithUserRoles()
+                .BuildUserResponse();
+
+    return Results.Ok(jwt);
+
+}).ProducesValidationProblem()
+      .Produces(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status400BadRequest)
+      .WithName("LoginUsuario")
+      .WithTags("Usuario");
 
 app.MapGet("/fornecedor", async (
     MinimalContextDb context) =>
