@@ -1,6 +1,7 @@
 using DEMO.Minimal.Api.Data;
 using DEMO.Minimal.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using MiniValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,71 @@ app.MapGet("/fornecedor/{id}", async (
     .Produces<Fornecedor>(StatusCodes.Status200OK)
     .Produces<Fornecedor>(StatusCodes.Status404NotFound)
     .WithName("GetFornecedorPorId")
+    .WithTags("Fornecedor");
+
+app.MapPost("/fornecedor", async (
+    MinimalContextDb context,
+    Fornecedor fornecedor) =>
+{
+    if (!MiniValidator.TryValidate(fornecedor, out var errors))
+        return Results.ValidationProblem(errors);
+
+    context.Fornecedores.Add(fornecedor);
+    var result = await context.SaveChangesAsync();
+
+    return result > 0
+        //? Results.Created($"/fornecedor/{fornecedor.Id}", fornecedor)
+        ? Results.CreatedAtRoute("GetFornecedorPorId", new { id = fornecedor.Id }, fornecedor)
+        : Results.BadRequest("Houve um problema ao salvar o registro");
+})
+    .ProducesValidationProblem()
+    .Produces<Fornecedor>(StatusCodes.Status201Created)
+    .Produces<Fornecedor>(StatusCodes.Status400BadRequest)
+    .WithName("PostFornecedor")
+    .WithTags("Fornecedor");
+
+app.MapPut("/fornecedor/{id}", async (
+      Guid id,
+      MinimalContextDb context,
+      Fornecedor fornecedor) =>
+{
+    var fornecedorBanco = await context.Fornecedores.FindAsync(id);
+    if (fornecedorBanco == null) return Results.NotFound();
+
+    if (!MiniValidator.TryValidate(fornecedor, out var errors))
+        return Results.ValidationProblem(errors);
+
+    context.Fornecedores.Update(fornecedor);
+    var result = await context.SaveChangesAsync();
+
+    return result > 0
+        ? Results.NoContent()
+        : Results.BadRequest("Houve um problema ao salvar o registro");
+
+}).ProducesValidationProblem()
+  .Produces(StatusCodes.Status204NoContent)
+  .Produces(StatusCodes.Status400BadRequest)
+  .WithName("PutFornecedor")
+  .WithTags("Fornecedor");
+
+app.MapDelete("/fornecedor/{id}", async (
+        Guid id,
+        MinimalContextDb context) =>
+{
+    var fornecedor = await context.Fornecedores.FindAsync(id);
+    if (fornecedor == null) return Results.NotFound();
+
+    context.Fornecedores.Remove(fornecedor);
+    var result = await context.SaveChangesAsync();
+
+    return result > 0
+        ? Results.NoContent()
+        : Results.BadRequest("Houve um problema ao salvar o registro");
+
+}).Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status404NotFound)
+    .WithName("DeleteFornecedor")
     .WithTags("Fornecedor");
 
 app.Run();
