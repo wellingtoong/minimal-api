@@ -24,6 +24,12 @@ builder.Services.AddDbContext<MinimalContextDb>(options =>
 builder.Services.AddIdentityConfiguration();
 builder.Services.AddJwtConfiguration(builder.Configuration, "AppSettings");
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ExcluirFornecedor",
+        policy => policy.RequireClaim("ExcluirFornecedor"));
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -196,6 +202,7 @@ app.MapDelete("/fornecedor/{id}", [Authorize] async (
 }).Produces(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status204NoContent)
     .Produces(StatusCodes.Status404NotFound)
+    .RequireAuthorization("ExcluirFornecedor")
     .WithName("DeleteFornecedor")
     .WithTags("Fornecedor");
 
