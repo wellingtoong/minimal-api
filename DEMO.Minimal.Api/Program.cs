@@ -1,4 +1,5 @@
 using DEMO.Minimal.Api.Data;
+using DEMO.Minimal.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,8 +22,21 @@ app.UseHttpsRedirection();
 
 app.MapGet("/fornecedor", async (
     MinimalContextDb context) =>
+
     await context.Fornecedores.ToListAsync())
     .WithName("GetFornecedor")
+    .WithTags("Fornecedor");
+
+app.MapGet("/fornecedor/{id}", async (
+    Guid id, MinimalContextDb context) =>
+
+    await context.Fornecedores.FindAsync(id)
+        is Fornecedor fornecedor
+            ? Results.Ok(fornecedor)
+            : Results.NotFound())
+    .Produces<Fornecedor>(StatusCodes.Status200OK)
+    .Produces<Fornecedor>(StatusCodes.Status404NotFound)
+    .WithName("GetFornecedorPorId")
     .WithTags("Fornecedor");
 
 app.Run();
