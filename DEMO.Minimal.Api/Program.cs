@@ -1,5 +1,6 @@
 using DEMO.Minimal.Api.Data;
 using DEMO.Minimal.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -34,7 +35,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthConfiguration();
 app.UseHttpsRedirection();
 
-app.MapPost("/registro", async (
+app.MapPost("/registro", [AllowAnonymous] async (
         SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager,
         IOptions<AppJwtSettings> appJwtSettings,
@@ -75,7 +76,7 @@ app.MapPost("/registro", async (
       .WithName("RegistroUsuario")
       .WithTags("Usuario");
 
-app.MapPost("/login", async (
+app.MapPost("/login", [AllowAnonymous] async (
         SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager,
         IOptions<AppJwtSettings> appJwtSettings,
@@ -112,7 +113,7 @@ app.MapPost("/login", async (
       .WithName("LoginUsuario")
       .WithTags("Usuario");
 
-app.MapGet("/fornecedor", async (
+app.MapGet("/fornecedor", [AllowAnonymous] async (
     MinimalContextDb context) =>
 
     await context.Fornecedores.ToListAsync())
@@ -131,7 +132,7 @@ app.MapGet("/fornecedor/{id}", async (
     .WithName("GetFornecedorPorId")
     .WithTags("Fornecedor");
 
-app.MapPost("/fornecedor", async (
+app.MapPost("/fornecedor", [Authorize] async (
     MinimalContextDb context,
     Fornecedor fornecedor) =>
 {
@@ -152,7 +153,7 @@ app.MapPost("/fornecedor", async (
     .WithName("PostFornecedor")
     .WithTags("Fornecedor");
 
-app.MapPut("/fornecedor/{id}", async (
+app.MapPut("/fornecedor/{id}", [Authorize] async (
       Guid id,
       MinimalContextDb context,
       Fornecedor fornecedor) =>
@@ -178,7 +179,7 @@ app.MapPut("/fornecedor/{id}", async (
   .WithName("PutFornecedor")
   .WithTags("Fornecedor");
 
-app.MapDelete("/fornecedor/{id}", async (
+app.MapDelete("/fornecedor/{id}", [Authorize] async (
         Guid id,
         MinimalContextDb context) =>
 {
