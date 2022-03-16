@@ -96,7 +96,7 @@ void MapActions(WebApplication app)
         SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager,
         IOptions<AppJwtSettings> appJwtSettings,
-        RegisterUser registerUser) =>
+        RegisterUser registerUser) => 
     {
         if (registerUser == null)
             return Results.BadRequest("Usuário não informado");
